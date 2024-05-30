@@ -1,15 +1,43 @@
-package stats
+package config
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/user"
-	"path/filepath"
 	"strings"
+
+	"github.com/go-git/go-git/v5"
 )
+
+func isRepo(path string) bool {
+	_, err := git.PlainOpen(path)
+	return err == nil
+}
+
+type Configuration struct {
+	Dotfile string
+}
+
+func (c *Configuration) AddFilesToScan(files []string) error {
+	return addNewSliceElementsToFile(c.Dotfile, files)
+}
+
+func (c *Configuration) GetRepositories() []string {
+	repositories := parseFileLinesToSlice(c.Dotfile)
+	return repositories
+}
+
+func Get() (*Configuration, error) {
+	fp, err := GetDotFilePath()
+	if err != nil {
+		return nil, err
+	}
+	return &Configuration{
+		Dotfile: *fp,
+	}, nil
+}
 
 // GetFolders returns all the folders needs to be scanned saved in dotfile
 func GetFolders() ([]string, error) {
@@ -116,89 +144,4 @@ func addNewSliceElementsToFile(filePath string, newRepos []string) error {
 	existingRepos := parseFileLinesToSlice(filePath)
 	repos := joinSlices(newRepos, existingRepos)
 	return dumpStringsSliceToFile(repos, filePath)
-}
-
-// recursiveScanFolder starts the recursive search of git repositories
-// living in the `folder` subtree
-func recursiveScanFolder(folder string) ([]string, error) {
-	return ScanGitFolders(make([]string, 0), folder)
-}
-
-// Scan scans a new folder for Git repositories
-func Scan(folder string) error {
-	repositories, err := recursiveScanFolder(folder)
-	if err != nil {
-		return err
-	}
-	filePath, err := GetDotFilePath()
-	if err != nil {
-		return err
-	}
-	return addNewSliceElementsToFile(*filePath, repositories)
-}
-
-// List list all repositories wich saved to scan
-func List() error {
-	configFilePath, err := GetDotFilePath()
-	if err != nil {
-		return err
-	}
-	repositories := parseFileLinesToSlice(*configFilePath)
-	fmt.Printf("Git folders:\n\n")
-	for _, repository := range repositories {
-		fmt.Printf("- %s\n", repository)
-	}
-	return nil
-}
-
-func ShouldBeIgnored(folderName string) bool {
-	return folderName == "vendor" || folderName == "node_modules" || folderName == "venv"
-}
-
-// ScanGitFolders returns a list of subfolders of `folder` ending with `.git`.
-// Returns the base folder of the repo, the .git folder parent.
-// Recursively searches in the subfolders by passing an existing `folders` slice.
-func ScanGitFolders(folders []string, folder string) ([]string, error) {
-	// trim the last `/`
-	folder = strings.TrimSuffix(folder, "/")
-
-	f, err := os.Open(folder)
-	if err != nil {
-		log.Fatal(err)
-		return folders, err
-	}
-
-	pathFrom, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-		return folders, err
-	}
-	pathFrom = filepath.Join(pathFrom, folder)
-	files, err := f.Readdir(-1)
-	f.Close()
-	if err != nil {
-		log.Fatal(err)
-		return folders, err
-	}
-	for _, file := range files {
-		if file.IsDir() {
-			pathRelative := folder + "/" + file.Name()
-			pathAbsolute := filepath.Join(pathFrom, file.Name())
-			if file.Name() == ".git" {
-				pathAbsolute = strings.TrimSuffix(pathAbsolute, "/.git")
-				fmt.Printf("Folder %s added to scan list\n", pathAbsolute)
-				folders = append(folders, pathAbsolute)
-				continue
-			}
-			if ShouldBeIgnored(file.Name()) {
-				continue
-			}
-			folders, err = ScanGitFolders(folders, pathRelative)
-			if err != nil {
-				return folders, err
-			}
-		}
-	}
-
-	return folders, nil
 }

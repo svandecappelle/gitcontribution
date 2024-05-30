@@ -1,4 +1,4 @@
-package stats
+package dashboard
 
 import (
 	"fmt"
@@ -9,6 +9,8 @@ import (
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
 	"golang.org/x/term"
+
+	"github.com/svandecappelle/gitcontrib/internal/interfaces"
 )
 
 type Contributions struct {
@@ -30,11 +32,10 @@ func (c Contributions) Str(color string) string {
 	)
 }
 
-func OpenDashboard(opts LaunchOptions) {
+func OpenDashboard(opts interfaces.LaunchOptions, rLaunch []*interfaces.StatsResult) {
 	folders := opts.Folders
 	results := []string{}
 	width, height, _ := term.GetSize(0)
-	rLaunch := Launch(opts)
 	nbCommits := 0
 	nbAnalyzed := 0
 
@@ -45,7 +46,7 @@ func OpenDashboard(opts LaunchOptions) {
 	colors := []string{"red", "green", "yellow", "blue", "magenta", "cyan", "white"}
 	var contribs []string
 
-	mergedValues := StatsResult{
+	mergedValues := interfaces.StatsResult{
 		Options:        rLaunch[0].Options,
 		BeginOfScan:    rLaunch[0].BeginOfScan,
 		EndOfScan:      rLaunch[0].EndOfScan,
@@ -84,13 +85,14 @@ func OpenDashboard(opts LaunchOptions) {
 			hoursData[i] += float64(v)
 		}
 
-		for author, c := range l.AuthorsEditions {
+		l.AuthorsEditions.Range(func(author string, contributions interfaces.Contribution) bool {
 			if authors[author] == nil {
 				authors[author] = make([]float64, 2)
 			}
-			authors[author][0] += float64(c["additions"])
-			authors[author][1] += float64(c["deletions"])
-		}
+			authors[author][0] += float64(contributions.Additions)
+			authors[author][1] += float64(contributions.Deletions)
+			return true
+		})
 	}
 
 	if nbCommits == 0 {

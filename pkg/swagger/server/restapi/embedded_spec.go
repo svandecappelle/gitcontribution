@@ -70,6 +70,12 @@ func init() {
             "description": "Recorded stats to given date. Default is today.",
             "name": "dateTo",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "User name filter contributions",
+            "name": "username",
+            "in": "query"
           }
         ],
         "responses": {
@@ -122,8 +128,27 @@ func init() {
         }
       }
     },
+    "GitAuthors": {
+      "properties": {
+        "additions": {
+          "type": "integer"
+        },
+        "deletions": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
     "GitCommits": {
       "properties": {
+        "authors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GitAuthors"
+          }
+        },
         "contributions": {
           "type": "object",
           "$ref": "#/definitions/GitAuthorContributions"
@@ -214,6 +239,12 @@ func init() {
             "description": "Recorded stats to given date. Default is today.",
             "name": "dateTo",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "User name filter contributions",
+            "name": "username",
+            "in": "query"
           }
         ],
         "responses": {
@@ -266,8 +297,27 @@ func init() {
         }
       }
     },
+    "GitAuthors": {
+      "properties": {
+        "additions": {
+          "type": "integer"
+        },
+        "deletions": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
     "GitCommits": {
       "properties": {
+        "authors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GitAuthors"
+          }
+        },
         "contributions": {
           "type": "object",
           "$ref": "#/definitions/GitAuthorContributions"

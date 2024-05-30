@@ -1,4 +1,4 @@
-package stats_test
+package scanner_test
 
 import (
 	"sync"
@@ -7,7 +7,8 @@ import (
 
 	"github.com/maxatome/go-testdeep/td"
 	"github.com/schollz/progressbar/v3"
-	"github.com/svandecappelle/gitcontrib/stats"
+	"github.com/svandecappelle/gitcontrib/internal/interfaces"
+	"github.com/svandecappelle/gitcontrib/internal/scanner"
 )
 
 var existingUser = "Steeve Vandecappelle"
@@ -19,54 +20,51 @@ var now = time.Now()
 var begin = now.AddDate(0, 0, -28)
 var days [7]int
 
-var statResults []stats.StatsResult = []stats.StatsResult{
-	stats.StatsResult{
-		Options: stats.StatsOptions{
+var statResults []interfaces.StatsResult = []interfaces.StatsResult{
+	interfaces.StatsResult{
+		Options: interfaces.StatsOptions{
 			EmailOrUsername:      nil,
 			DurationParamInWeeks: 4,
 			Folders:              currentRepo,
 			Delta:                "",
 			Silent:               true,
 		},
-		BeginOfScan:     begin,
-		EndOfScan:       now,
-		DurationInDays:  28,
-		Folder:          currentRepo[0],
-		Commits:         make(map[int]int),
-		DayCommits:      days,
-		AuthorsEditions: make(map[string]map[string]int),
+		BeginOfScan:    begin,
+		EndOfScan:      now,
+		DurationInDays: 28,
+		Folder:         currentRepo[0],
+		Commits:        make(map[int]int),
+		DayCommits:     days,
 	},
-	stats.StatsResult{
-		Options: stats.StatsOptions{
+	interfaces.StatsResult{
+		Options: interfaces.StatsOptions{
 			EmailOrUsername:      &unknownUser,
 			DurationParamInWeeks: 4,
 			Folders:              currentRepo,
 			Delta:                "",
 			Silent:               true,
 		},
-		BeginOfScan:     begin,
-		EndOfScan:       now,
-		DurationInDays:  28,
-		Folder:          currentRepo[0],
-		Commits:         make(map[int]int),
-		DayCommits:      days,
-		AuthorsEditions: make(map[string]map[string]int),
+		BeginOfScan:    begin,
+		EndOfScan:      now,
+		DurationInDays: 28,
+		Folder:         currentRepo[0],
+		Commits:        make(map[int]int),
+		DayCommits:     days,
 	},
-	stats.StatsResult{
-		Options: stats.StatsOptions{
+	interfaces.StatsResult{
+		Options: interfaces.StatsOptions{
 			EmailOrUsername:      &existingUser,
 			DurationParamInWeeks: 4,
 			Folders:              currentRepo,
 			Delta:                "",
 			Silent:               true,
 		},
-		BeginOfScan:     begin,
-		EndOfScan:       now,
-		DurationInDays:  28,
-		Folder:          currentRepo[0],
-		Commits:         make(map[int]int),
-		DayCommits:      days,
-		AuthorsEditions: make(map[string]map[string]int),
+		BeginOfScan:    begin,
+		EndOfScan:      now,
+		DurationInDays: 28,
+		Folder:         currentRepo[0],
+		Commits:        make(map[int]int),
+		DayCommits:     days,
 	},
 }
 
@@ -74,7 +72,7 @@ func TestStatForUser(tt *testing.T) {
 	for _, r := range statResults {
 		t := td.NewT(tt)
 		wg.Add(1)
-		go stats.Stats(&r, &wg, bar)
+		go scanner.Stats(&r, &wg, bar)
 		t.CmpNoError(r.Error)
 	}
 	wg.Wait()
@@ -84,7 +82,7 @@ func TestStatWithDelta(tt *testing.T) {
 	t := td.NewT(tt)
 
 	for _, d := range []string{"1w", "1m", "1y", "2y"} {
-		options := stats.LaunchOptions{
+		options := interfaces.LaunchOptions{
 			User:            nil,
 			DurationInWeeks: 4,
 			Folders:         currentRepo,
@@ -92,11 +90,11 @@ func TestStatWithDelta(tt *testing.T) {
 			Delta:           d,
 			Dashboard:       false,
 		}
-		r := stats.Launch(options)
+		r := scanner.Launch(options)
 		t.CmpNoError(r[0].Error)
 	}
 
-	options := stats.LaunchOptions{
+	options := interfaces.LaunchOptions{
 		User:            nil,
 		DurationInWeeks: 4,
 		Folders:         currentRepo,
@@ -104,7 +102,7 @@ func TestStatWithDelta(tt *testing.T) {
 		Delta:           "xx",
 		Dashboard:       false,
 	}
-	r := stats.Launch(options)
+	r := scanner.Launch(options)
 	t.CmpError(r[0].Error)
 	if r[0].Error != nil {
 		t.Cmp(r[0].Error.Error(), "invalid delta value use the format: <int>[y/m/w/d]")

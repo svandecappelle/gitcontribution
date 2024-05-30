@@ -1,10 +1,13 @@
-package stats
+package dashboard
 
 import (
 	"fmt"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/svandecappelle/gitcontrib/internal/date"
+	"github.com/svandecappelle/gitcontrib/internal/interfaces"
 )
 
 type OutputType int64
@@ -18,10 +21,10 @@ type StatsResultConsolePrinter struct {
 	OutputType OutputType
 }
 
-func PrintResult(r *StatsResult) {
+func PrintResult(r *interfaces.StatsResult) {
 	o := r.Options
-	start := getBeginningOfDay(r.BeginOfScan)
-	end := getEndOfDay(r.EndOfScan)
+	start := date.GetBeginningOfDay(r.BeginOfScan)
+	end := date.GetEndOfDay(r.EndOfScan)
 
 	if !o.Silent {
 		Print(Header, strings.Join(o.Folders, ","))
@@ -43,7 +46,7 @@ func PrintResult(r *StatsResult) {
 	StatsResultConsolePrinter{Console}.print(r, -1)
 }
 
-func (p StatsResultConsolePrinter) print(r *StatsResult, limitWeeks int) string {
+func (p StatsResultConsolePrinter) print(r *interfaces.StatsResult, limitWeeks int) string {
 	switch p.OutputType {
 	case Dashboard:
 		// nothing
@@ -54,7 +57,7 @@ func (p StatsResultConsolePrinter) print(r *StatsResult, limitWeeks int) string 
 	return ""
 }
 
-func (p StatsResultConsolePrinter) GetCommitsTable(s *StatsResult, limitWeeks int) string {
+func (p StatsResultConsolePrinter) GetCommitsTable(s *interfaces.StatsResult, limitWeeks int) string {
 	keys := sortMapIntoSlice(s)
 	return p.getCells(keys, s, limitWeeks)
 }
@@ -69,8 +72,8 @@ func Print(c TermStyle, s string) {
 
 // printMonths prints the month names in the first line, determining when the month
 // changed between switching weeks
-func getMonths(r *StatsResult, limitWeeks int) string {
-	week := getBeginningOfDay(r.EndOfScan).Add(-(time.Duration(r.DurationInDays) * time.Hour * 24))
+func getMonths(r *interfaces.StatsResult, limitWeeks int) string {
+	week := date.GetBeginningOfDay(r.EndOfScan).Add(-(time.Duration(r.DurationInDays) * time.Hour * 24))
 	month := week.Month()
 	out := "    "
 	i := r.DurationInDays
@@ -101,13 +104,13 @@ func getDayCol(day int) string {
 }
 
 // getCells build a string for the cells of the graph
-func (p StatsResultConsolePrinter) getCells(keys []int, r *StatsResult, limitWeeks int) string {
+func (p StatsResultConsolePrinter) getCells(keys []int, r *interfaces.StatsResult, limitWeeks int) string {
 	out := ""
 	out += getMonths(r, limitWeeks)
 	durationInWeeks := r.DurationInDays / 7
 
 	begin := r.BeginOfScan // .AddDate(0, 0, int(-offset))
-	end := getEndOfDay(r.EndOfScan)
+	end := date.GetEndOfDay(r.EndOfScan)
 
 	current := begin
 	for i := 0; i < 7; i += 1 {
@@ -122,14 +125,14 @@ func (p StatsResultConsolePrinter) getCells(keys []int, r *StatsResult, limitWee
 				current = current.AddDate(0, 0, 7)
 				continue
 			}
-			if daysBetween(r.BeginOfScan, current) < 7 {
+			if date.DaysBetween(r.BeginOfScan, current) < 7 {
 				// first week print weekday
 				out += getDayCol(int(current.Weekday()))
 			}
 			day := end.Sub(current).Hours() / 24
 			out += p.getCell(r.Commits[int(day+8)], current)
 
-			if daysBetween(current, r.EndOfScan) < 7 {
+			if date.DaysBetween(current, r.EndOfScan) < 7 {
 				// last week return to begin
 				out += "\n"
 			}
@@ -143,7 +146,7 @@ func (p StatsResultConsolePrinter) getCells(keys []int, r *StatsResult, limitWee
 
 // getCell given a cell value prints it with a different format
 // based on the value amount, and on the `today` flag.
-func (p StatsResultConsolePrinter) getCell(val int, date time.Time) string {
+func (p StatsResultConsolePrinter) getCell(val int, d time.Time) string {
 	str := "  %d "
 	switch {
 	case val == 0:
@@ -159,10 +162,10 @@ func (p StatsResultConsolePrinter) getCell(val int, date time.Time) string {
 		cellContent = fmt.Sprintf(str, val)
 	}
 	switch {
-	case getBeginningOfDay(date).Equal(getBeginningOfDay(time.Now())):
+	case date.GetBeginningOfDay(d).Equal(date.GetBeginningOfDay(time.Now())):
 		// today
 		return p.colorize(Today, cellContent)
-	case date.Day() == 1:
+	case d.Day() == 1:
 		// first of month
 		return p.colorize(FirstOfMonth, cellContent)
 	case val == 0:
@@ -177,7 +180,7 @@ func (p StatsResultConsolePrinter) getCell(val int, date time.Time) string {
 }
 
 // sortMapIntoSlice returns a slice of indexes of a map, ordered
-func sortMapIntoSlice(r *StatsResult) []int {
+func sortMapIntoSlice(r *interfaces.StatsResult) []int {
 	// order map
 	// To store the keys in slice in sorted order
 	var keys []int

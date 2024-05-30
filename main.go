@@ -10,10 +10,14 @@ import (
 	"time"
 
 	"github.com/muja/goconfig"
-	"github.com/svandecappelle/gitcontrib/pkg/swagger/services"
-	"github.com/svandecappelle/gitcontrib/stats"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/term"
+
+	"github.com/svandecappelle/gitcontrib/internal/config"
+	"github.com/svandecappelle/gitcontrib/internal/dashboard"
+	"github.com/svandecappelle/gitcontrib/internal/interfaces"
+	"github.com/svandecappelle/gitcontrib/internal/scanner"
+	"github.com/svandecappelle/gitcontrib/pkg/swagger/services"
 )
 
 func getUserFromGitConfig() (*string, *string, error) {
@@ -64,7 +68,7 @@ func commands() []*cli.Command {
 			Aliases: []string{"lr"},
 			Usage:   "List repositories to scan for statistic",
 			Action: func(c *cli.Context) error {
-				return stats.List()
+				return scanner.List()
 			},
 		},
 		{
@@ -181,7 +185,7 @@ func argParse(c *cli.Context, useDashboard bool) error {
 	}
 
 	if len(folders) == 0 {
-		folders, err = stats.GetFolders()
+		folders, err = config.GetFolders()
 		if err != nil {
 			return err
 		}
@@ -204,7 +208,7 @@ func argParse(c *cli.Context, useDashboard bool) error {
 	}
 
 	if useDashboard {
-		stats.OpenDashboard(stats.LaunchOptions{
+		opts := interfaces.LaunchOptions{
 			User:             user,
 			DurationInWeeks:  durationInWeeks,
 			Folders:          folders,
@@ -213,9 +217,11 @@ func argParse(c *cli.Context, useDashboard bool) error {
 			Dashboard:        true,
 			PatternToExclude: c.StringSlice("file-exclude-pattern"),
 			PatternToInclude: c.StringSlice("file-include-pattern"),
-		})
+		}
+		r := scanner.Launch(opts)
+		dashboard.OpenDashboard(opts, r)
 	} else {
-		stats.Launch(stats.LaunchOptions{
+		scanner.Launch(interfaces.LaunchOptions{
 			User:            user,
 			DurationInWeeks: durationInWeeks,
 			Folders:         folders,
@@ -229,7 +235,7 @@ func argParse(c *cli.Context, useDashboard bool) error {
 }
 
 func addToScan(folder string) error {
-	return stats.Scan(folder)
+	return scanner.Scan(folder)
 }
 
 func main() {

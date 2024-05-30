@@ -56,6 +56,11 @@ paths:
           description: Recorded stats to given date. Default is today.
           type: string
           format: date-time
+        - name: username
+          in: query
+          required: false
+          description: User name filter contributions
+          type: string
       responses:
         200:
           description: Returns the report of a given day
@@ -89,8 +94,20 @@ definitions:
       contributions:
         type: object
         $ref: '#/definitions/GitAuthorContributions'
+      authors:
+        type: array
+        items:
+          $ref: '#/definitions/GitAuthors'
   GitAuthorContributions:
     properties:
+      additions:
+        type: integer
+      deletions:
+        type: integer
+  GitAuthors:
+    properties:
+      name:
+        type: string
       additions:
         type: integer
       deletions:

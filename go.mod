@@ -12,6 +12,7 @@ require (
 	github.com/go-openapi/spec v0.20.8
 	github.com/go-openapi/strfmt v0.21.3
 	github.com/go-openapi/swag v0.22.3
+	github.com/go-openapi/validate v0.21.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/maxatome/go-testdeep v1.10.1
 	github.com/muja/goconfig v0.0.0-20180417074348-0a635507dddc
@@ -35,7 +36,6 @@ require (
 	github.com/go-openapi/analysis v0.21.4 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
-	github.com/go-openapi/validate v0.21.0 // indirect
 	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect

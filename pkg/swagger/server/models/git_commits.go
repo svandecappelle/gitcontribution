@@ -7,6 +7,7 @@ package models
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
@@ -18,6 +19,9 @@ import (
 //
 // swagger:model GitCommits
 type GitCommits struct {
+
+	// authors
+	Authors []*GitAuthors `json:"authors"`
 
 	// contributions
 	Contributions *GitAuthorContributions `json:"contributions,omitempty"`
@@ -37,6 +41,10 @@ type GitCommits struct {
 func (m *GitCommits) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateAuthors(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateContributions(formats); err != nil {
 		res = append(res, err)
 	}
@@ -48,6 +56,32 @@ func (m *GitCommits) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *GitCommits) validateAuthors(formats strfmt.Registry) error {
+	if swag.IsZero(m.Authors) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Authors); i++ {
+		if swag.IsZero(m.Authors[i]) { // not required
+			continue
+		}
+
+		if m.Authors[i] != nil {
+			if err := m.Authors[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("authors" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("authors" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -86,6 +120,10 @@ func (m *GitCommits) validateDatetime(formats strfmt.Registry) error {
 func (m *GitCommits) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateAuthors(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateContributions(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -93,6 +131,26 @@ func (m *GitCommits) ContextValidate(ctx context.Context, formats strfmt.Registr
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *GitCommits) contextValidateAuthors(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Authors); i++ {
+
+		if m.Authors[i] != nil {
+			if err := m.Authors[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("authors" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("authors" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

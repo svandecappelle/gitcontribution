@@ -1,0 +1,14 @@
+---
+linters-settings:
+  gci:
+    # deprecated: Required for make test on sdev
+    local-prefixes: github.com/svandecappelle/gitcontrib
+    sections:
+      - standard
+      - default
+      - prefix(github.com/svandecappelle/gitcontrib)
+
+issues:
+  include:
+    - EXC0012  # EXC0012 revive: Annoying issue about not having a comment. The rare codebase has such comments
+    - EXC0014  # EXC0014 revive: Annoying issue about not having a comment. The rare codebase has such comments

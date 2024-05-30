@@ -17,6 +17,7 @@ import (
 type GetAPIReportURL struct {
 	DateFrom *strfmt.DateTime
 	DateTo   *strfmt.DateTime
+	Username *string
 
 	_basePath string
 	// avoid unkeyed usage
@@ -63,6 +64,14 @@ func (o *GetAPIReportURL) Build() (*url.URL, error) {
 	}
 	if dateToQ != "" {
 		qs.Set("dateTo", dateToQ)
+	}
+
+	var usernameQ string
+	if o.Username != nil {
+		usernameQ = *o.Username
+	}
+	if usernameQ != "" {
+		qs.Set("username", usernameQ)
 	}
 
 	_result.RawQuery = qs.Encode()

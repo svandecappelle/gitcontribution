@@ -40,6 +40,10 @@ type GetAPIReportParams struct {
 	  In: query
 	*/
 	DateTo *strfmt.DateTime
+	/*User name filter contributions
+	  In: query
+	*/
+	Username *string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -60,6 +64,11 @@ func (o *GetAPIReportParams) BindRequest(r *http.Request, route *middleware.Matc
 
 	qDateTo, qhkDateTo, _ := qs.GetOK("dateTo")
 	if err := o.bindDateTo(qDateTo, qhkDateTo, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qUsername, qhkUsername, _ := qs.GetOK("username")
+	if err := o.bindUsername(qUsername, qhkUsername, route.Formats); err != nil {
 		res = append(res, err)
 	}
 	if len(res) > 0 {
@@ -139,5 +148,23 @@ func (o *GetAPIReportParams) validateDateTo(formats strfmt.Registry) error {
 	if err := validate.FormatOf("dateTo", "query", "date-time", o.DateTo.String(), formats); err != nil {
 		return err
 	}
+	return nil
+}
+
+// bindUsername binds and validates parameter Username from query.
+func (o *GetAPIReportParams) bindUsername(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+	o.Username = &raw
+
 	return nil
 }
